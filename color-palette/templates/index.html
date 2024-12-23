@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      span {
+        opacity: 0;
+      }
+
+      div:hover > span {
+        opacity: 1;
+      }
+    </style>
+    <title>Color Palette Generator</title>
+  </head>
+
+  <body>
+    <div id="container" class="relative flex h-screen bg-red-400 w-screen">
+      <div
+        id="input-group"
+        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/2 h-12 bg-red-400 flex rounded-sm"
+      >
+        <input name="prompt" id="prompt" class="w-3/4 h-full" />
+        <button
+          class="bg-green-400 text-white w-1/4 text-xl hover:bg-green-500 duration-300"
+          id="btn"
+        >
+          Generate
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const container = document.getElementById("container");
+      const input = document.getElementById("prompt");
+      const button = document.getElementById("btn");
+      const defaultPalette = [
+        "#1E90FF",
+        "#00BFFF",
+        "#87CEEB",
+        "#4682B4",
+        "#5F9EA0",
+      ];
+
+      async function generatePalette() {
+        const prompt = input.value;
+        const res = await fetch(`/palette?prompt=${prompt}`);
+        const json = await res.json();
+        render(json);
+      }
+
+      function render(palette = []) {
+        // clean the container
+        const cards = [];
+
+        container.childNodes.forEach((child) => {
+          if (
+            child.getAttribute &&
+            child.getAttribute("id") === "input-group"
+          ) {
+            return;
+          }
+
+          container.removeChild(child);
+        });
+        palette.forEach((color) => {
+          const card = document.createElement("div");
+          const colorSpan = document.createElement("span");
+
+          colorSpan.innerText = color;
+          colorSpan.classList.add(
+            ...[
+              "text-4xl",
+              "text-white",
+              "pb-64",
+              "duration-300",
+              "select-none",
+            ]
+          );
+
+          card.appendChild(colorSpan);
+          card.classList.add(
+            ...[
+              "h-screen",
+              "w-full",
+              "flex",
+              "justify-center",
+              "items-end",
+              "cursor-pointer",
+            ]
+          );
+
+          card.addEventListener("click", async () => {
+            await navigator.clipboard.writeText(color);
+          });
+
+          card.style.background = color;
+          cards.push(card);
+        });
+
+        container.append(...cards);
+      }
+
+      render(defaultPalette);
+      button.addEventListener("click", generatePalette);
+    </script>
+  </body>
+</html>
